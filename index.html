@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="일상 심리를 원논문의 연구 결과와 비교해 보는 교육용 인터랙티브 도구" />
+  <title>MindCheck | 당연한 심리를 실험으로 다시 확인하다</title>
+  <style>
+    :root {
+      --paper: #f7f3ea;
+      --paper-2: #eee8dc;
+      --ink: #152338;
+      --muted: #667085;
+      --blue: #315d9a;
+      --blue-soft: #dce8f5;
+      --coral: #e6684f;
+      --green: #2f7d68;
+      --line: rgba(21, 35, 56, .14);
+      --shadow: 0 24px 70px rgba(24, 37, 55, .12);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 8%, rgba(49,93,154,.09), transparent 25rem),
+        radial-gradient(circle at 92% 75%, rgba(230,104,79,.08), transparent 22rem),
+        var(--paper);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    [hidden] { display: none !important; }
+
+    .shell { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(247,243,234,.84);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.03em; }
+    .brand-mark { width: 14px; height: 14px; border: 3px solid var(--blue); border-radius: 50%; position: relative; }
+    .brand-mark::after { content: ""; position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--coral); right: -6px; bottom: -3px; }
+    .nav-note { color: var(--muted); font-size: .86rem; }
+
+    .hero { padding: 88px 0 58px; display: grid; grid-template-columns: 1.25fr .75fr; gap: 54px; align-items: end; }
+    .eyebrow { color: var(--blue); font-weight: 800; letter-spacing: .08em; font-size: .78rem; text-transform: uppercase; }
+    h1 { margin: 14px 0 20px; max-width: 760px; font-size: clamp(2.45rem, 6vw, 5.4rem); line-height: 1.06; letter-spacing: -.065em; }
+    .hero p { margin: 0; max-width: 660px; color: #475467; font-size: clamp(1rem, 2vw, 1.18rem); }
+    .hero-card { border: 1px solid var(--line); background: rgba(255,255,255,.55); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); transform: rotate(1deg); }
+    .hero-card strong { display: block; margin-bottom: 12px; }
+    .flow { display: grid; gap: 10px; }
+    .flow span { display: flex; align-items: center; gap: 10px; font-size: .94rem; }
+    .flow b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); font-size: .78rem; }
+
+    .notice { display: flex; gap: 12px; align-items: flex-start; border: 1px solid #cbd9ea; background: #eff5fb; border-radius: 18px; padding: 18px 20px; margin-bottom: 38px; }
+    .notice-icon { color: var(--blue); font-weight: 900; }
+    .notice p { margin: 0; font-size: .92rem; color: #3f5673; }
+
+    .section-title { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin: 54px 0 22px; }
+    .section-title h2 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.5rem); letter-spacing: -.04em; }
+    .section-title p { margin: 0; color: var(--muted); font-size: .92rem; }
+    .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .module-card { min-height: 260px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.72); box-shadow: 0 12px 35px rgba(24,37,55,.07); display: flex; flex-direction: column; transition: .22s ease; }
+    .module-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .module-no { color: var(--coral); font-weight: 900; font-size: .8rem; letter-spacing: .08em; }
+    .module-card h3 { margin: 14px 0 10px; font-size: 1.35rem; letter-spacing: -.035em; }
+    .module-card p { color: var(--muted); font-size: .93rem; margin: 0 0 22px; }
+    .module-card button { margin-top: auto; width: 100%; }
+
+    .primary, .secondary, .ghost {
+      border-radius: 999px; padding: 12px 18px; border: 1px solid transparent; font-weight: 800; transition: .18s ease;
+    }
+    .primary { background: var(--ink); color: white; }
+    .primary:hover { background: var(--blue); transform: translateY(-1px); }
+    .secondary { background: var(--blue-soft); color: #244d86; }
+    .secondary:hover { background: #cbdcf0; }
+    .ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+    .ghost:hover { background: rgba(255,255,255,.75); }
+
+    .lab { margin: 70px 0 100px; }
+    .lab-panel { overflow: hidden; border: 1px solid var(--line); border-radius: 32px; background: rgba(255,255,255,.8); box-shadow: var(--shadow); }
+    .lab-head { padding: 26px 30px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+    .lab-head h2 { margin: 0; font-size: 1.35rem; letter-spacing: -.03em; }
+    .lab-head small { color: var(--muted); }
+    .lab-body { padding: clamp(22px, 5vw, 48px); }
+    .step-kicker { color: var(--blue); font-size: .78rem; font-weight: 900; letter-spacing: .09em; }
+    .lab-body h3 { font-size: clamp(1.6rem, 4vw, 2.65rem); line-height: 1.18; letter-spacing: -.045em; margin: 10px 0 16px; }
+    .lead { color: var(--muted); max-width: 760px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+
+    .design-studio { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .design-option { padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: #faf9f6; }
+    .design-option h4 { margin: 0 0 12px; font-size: .92rem; }
+    .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+    .swatch { width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 1px var(--line); }
+    .swatch.active { box-shadow: 0 0 0 3px var(--ink); }
+    .pattern-choice { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; background: white; }
+    .pattern-choice.active { color: white; background: var(--ink); }
+    .name-input { width: 100%; border: 1px solid var(--line); padding: 11px 13px; border-radius: 12px; background: white; color: var(--ink); }
+    .build-area { margin-top: 30px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 26px; }
+    .parts-box, .shelf-stage { min-height: 390px; border-radius: 24px; padding: 22px; border: 1px dashed rgba(49,93,154,.28); background: #f5f8fb; }
+    .parts-box h4, .shelf-stage h4 { margin: 0 0 16px; }
+    .parts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .part { min-height: 74px; padding: 12px; background: white; border: 2px solid #9eb4d0; border-radius: 14px; color: #254b7f; font-weight: 800; display: grid; place-items: center; text-align: center; user-select: none; touch-action: none; }
+    .part.selected { outline: 4px solid rgba(230,104,79,.22); border-color: var(--coral); }
+    .part.placed { opacity: .32; pointer-events: none; text-decoration: line-through; }
+    .shelf-frame { --wood: #5879a2; --backing: #e5edf6; width: min(360px, 96%); height: 340px; margin: 16px auto 0; display: grid; grid-template-columns: 38px 1fr 38px; grid-template-rows: 38px 1fr 34px; gap: 8px; padding: 8px; border-radius: 16px; background-color: var(--backing); }
+    .shelf-frame.pattern-dots { background-image: radial-gradient(rgba(21,35,56,.16) 1px, transparent 1px); background-size: 13px 13px; }
+    .shelf-frame.pattern-lines { background-image: repeating-linear-gradient(135deg, rgba(21,35,56,.1) 0 1px, transparent 1px 12px); }
+    .slot { position: relative; border: 2px dashed #7394bb; border-radius: 10px; display: grid; place-items: center; color: #31577f; font-size: .78rem; font-weight: 800; background: rgba(255,255,255,.86); }
+    .slot[data-slot="top"] { grid-column: 1 / 4; grid-row: 1; }
+    .slot[data-slot="left"] { grid-column: 1; grid-row: 2; }
+    .slot[data-slot="right"] { grid-column: 3; grid-row: 2; }
+    .slot[data-slot="bottom"] { grid-column: 1 / 4; grid-row: 3; }
+    .shelves { grid-column: 2; grid-row: 2; display: grid; grid-template-rows: repeat(3, 1fr); gap: 12px; padding: 38px 0; }
+    .slot.correct { border-style: solid; border-color: var(--wood); color: transparent; background: var(--wood); box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); }
+    .feet { grid-column: 1 / 4; grid-row: 3; display: flex; align-items: end; justify-content: space-between; pointer-events: none; transform: translateY(34px); }
+    .foot-slot { width: 52px; height: 22px; pointer-events: auto; }
+    .slot.wrong { animation: shake .25s linear 2; border-color: var(--coral); }
+    @keyframes shake { 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .build-status { margin-top: 18px; min-height: 30px; color: var(--green); font-weight: 800; text-align: center; }
+
+    .ratings { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .rating-card { padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: #faf9f6; }
+    .finished-shelf { --preview-wood: #5879a2; width: 150px; height: 142px; margin: 0 auto 18px; padding: 13px 14px 17px; border: 10px solid var(--preview-wood); border-bottom-width: 13px; border-radius: 6px 6px 3px 3px; position: relative; background-color: #edf2f7; box-shadow: 0 12px 22px rgba(21,35,56,.13); }
+    .finished-shelf.pattern-dots { background-image: radial-gradient(rgba(21,35,56,.19) 1px, transparent 1px); background-size: 11px 11px; }
+    .finished-shelf.pattern-lines { background-image: repeating-linear-gradient(135deg, rgba(21,35,56,.12) 0 1px, transparent 1px 11px); }
+    .finished-shelf::before, .finished-shelf::after { content:""; position:absolute; left:0; right:0; height:8px; background:var(--preview-wood); box-shadow: 0 1px 1px rgba(21,35,56,.18); }
+    .finished-shelf::before { top:38px; } .finished-shelf::after { top:82px; }
+    .finished-shelf .shelf-label { position:absolute; left:50%; bottom:-34px; transform:translateX(-50%); min-width:90px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; padding:4px 10px; border-radius:999px; background:var(--preview-wood); color:white; font-size:.72rem; font-weight:900; }
+    .finished-shelf.auto-preview { --preview-wood:#8b96a6; background: repeating-linear-gradient(90deg,#f0f1f3 0 12px,#e5e7eb 12px 24px); }
+    .rating-card h4 { margin-top: 38px; text-align: center; }
+    .field { margin-top: 18px; }
+    .field label { display: flex; justify-content: space-between; gap: 12px; font-weight: 800; font-size: .9rem; }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    input[type="number"] { width: 100%; margin-top: 8px; border: 1px solid var(--line); padding: 12px 14px; border-radius: 12px; background: white; color: var(--ink); }
+
+    .result { margin-top: 28px; padding: 25px; border-radius: 22px; background: #eef4fa; border: 1px solid #c9d9eb; }
+    .result h4 { margin: 0 0 10px; font-size: 1.25rem; }
+    .result p { margin: 8px 0; }
+    .result .limit { color: #5e3f38; background: #fff7f3; border-left: 4px solid var(--coral); padding: 12px 14px; margin-top: 18px; }
+
+    .scenario { margin: 26px 0; padding: 26px; border-radius: 22px; background: #f3f0e8; border: 1px solid var(--line); font-size: 1.08rem; }
+    .big-number { font-size: 3rem; font-weight: 900; color: var(--blue); letter-spacing: -.05em; }
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+    .choice { min-height: 110px; padding: 20px; border: 2px solid var(--line); border-radius: 18px; background: white; text-align: left; font-weight: 800; }
+    .choice:hover { border-color: var(--blue); background: #f2f6fb; }
+
+    dialog { width: min(720px, calc(100% - 28px)); border: 0; padding: 0; border-radius: 26px; color: var(--ink); box-shadow: 0 40px 100px rgba(10,20,35,.28); }
+    dialog::backdrop { background: rgba(15,25,40,.55); backdrop-filter: blur(5px); }
+    .modal { padding: 30px; background: var(--paper); }
+    .modal-top { display: flex; justify-content: space-between; gap: 18px; align-items: start; }
+    .modal h3 { margin: 0; font-size: 1.5rem; }
+    .close { border: 0; width: 38px; height: 38px; border-radius: 50%; background: white; font-size: 1.25rem; }
+    .source-box { margin-top: 20px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: white; font-size: .92rem; }
+    .source-box a { color: var(--blue); font-weight: 800; }
+
+    footer { border-top: 1px solid var(--line); padding: 30px 0 48px; color: var(--muted); font-size: .86rem; }
+    footer strong { color: var(--ink); }
+
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; padding-top: 62px; }
+      .hero-card { transform: none; }
+      .module-grid, .build-area, .ratings { grid-template-columns: 1fr; }
+      .build-area { gap: 14px; }
+      .parts-box, .shelf-stage { min-height: auto; }
+      .nav-note { display: none; }
+    }
+    @media (max-width: 540px) {
+      .shell { width: min(100% - 20px, 1080px); }
+      h1 { font-size: 2.65rem; }
+      .module-grid { grid-template-columns: 1fr; }
+      .lab-head { align-items: flex-start; flex-direction: column; }
+      .lab-body { padding: 22px 17px 28px; }
+      .parts { grid-template-columns: 1fr 1fr; }
+      .choice-grid { grid-template-columns: 1fr; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell nav">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span> MindCheck</div>
+      <div class="nav-note">당연한 마음을 연구와 나란히 놓아보는 작은 실험실</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Interactive Psychology Lab</div>
+        <h1>당연한 심리를<br>실험으로 다시 확인하다</h1>
+        <p>“원래 그런 거지”라고 넘겼던 일상의 마음을 짧은 활동으로 살펴보고, 원논문이 실제로 확인한 결과와 한계를 함께 확인합니다.</p>
+      </div>
+      <aside class="hero-card">
+        <strong>이 사이트가 결과를 만드는 방식</strong>
+        <div class="flow">
+          <span><b>1</b> 일상적인 상황에 직접 반응하기</span>
+          <span><b>2</b> 내가 어떤 선택을 했는지 쉽게 풀어보기</span>
+          <span><b>3</b> 실제 연구에서는 무엇이 관찰됐는지 확인하기</span>
+          <span><b>4</b> 연구의 조건과 한계까지 함께 읽기</span>
+        </div>
+      </aside>
+    </section>
+
+    <div class="notice">
+      <div class="notice-icon">!</div>
+      <p><strong>체험 전에:</strong> 여기에는 정답도, 사람을 나누는 점수도 없습니다. 짧은 활동에서 내가 어떤 선택을 했는지 살펴보고 실제 연구와 나란히 놓아보는 공간입니다. 입력한 내용은 저장되지 않습니다.</p>
+    </div>
+
+    <section id="modules">
+      <div class="section-title">
+        <h2>어떤 ‘당연함’을 확인해 볼까요?</h2>
+        <p>세 활동은 서로 다른 비교 로직을 사용합니다.</p>
+      </div>
+      <div class="module-grid">
+        <article class="module-card">
+          <span class="module-no">EXPERIENCE 01</span>
+          <h3>직접 만든 것은 정말 더 좋아 보일까?</h3>
+          <p>가상 책장을 완성하고, 직접 만든 결과물과 자동 완성품에 부여한 애착과 가치를 비교합니다.</p>
+          <button class="primary" data-open="ikea">책장 조립 시작</button>
+        </article>
+        <article class="module-card">
+          <span class="module-no">EXPERIENCE 02</span>
+          <h3>내 실수를 모두가 봤다고 느끼는 이유는?</h3>
+          <p>다른 사람들이 내 실수를 얼마나 알아차릴지 예상하고, 조명 효과 연구의 집단 결과와 비교합니다.</p>
+          <button class="primary" data-open="spotlight">주목 인원 예상하기</button>
+        </article>
+        <article class="module-card">
+          <span class="module-no">EXPERIENCE 03</span>
+          <h3>이미 쓴 돈은 선택을 얼마나 바꿀까?</h3>
+          <p>무작위로 배정된 영화 관람 상황에서 선택한 뒤, 매몰비용이 판단에 개입하는 방식을 확인합니다.</p>
+          <button class="primary" data-open="sunk">무작위 상황 받기</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="lab" id="lab" hidden>
+      <div class="lab-panel">
+        <div class="lab-head">
+          <div>
+            <small id="labLabel">체험 모듈</small>
+            <h2 id="labTitle">제목</h2>
+          </div>
+          <button class="ghost" id="backHome">체험 선택으로 돌아가기</button>
+        </div>
+        <div class="lab-body" id="labBody"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="researchDialog">
+    <div class="modal">
+      <div class="modal-top">
+        <div><div class="step-kicker">ORIGINAL RESEARCH</div><h3 id="modalTitle">연구에서는 어떻게 확인했을까?</h3></div>
+        <button class="close" aria-label="닫기">×</button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </dialog>
+
+  <footer>
+    <div class="shell"><strong>MindCheck</strong> · “원래 그런 거지”라고 넘겼던 마음을 실제 연구와 함께 다시 살펴보는 프로젝트</div>
+  </footer>
+
+  <script>
+    const lab = document.querySelector('#lab');
+    const modules = document.querySelector('#modules');
+    const labBody = document.querySelector('#labBody');
+    const labTitle = document.querySelector('#labTitle');
+    const labLabel = document.querySelector('#labLabel');
+    const dialog = document.querySelector('#researchDialog');
+    const modalTitle = document.querySelector('#modalTitle');
+    const modalContent = document.querySelector('#modalContent');
+
+    const evidence = {
+      ikea: {
+        title: '이케아 효과: Norton et al. (2012)',
+        html: `<p>Norton, Mochon과 Ariely는 사람들이 직접 조립한 제품을 완성품보다 더 높게 평가하는 경향을 보고했습니다. 논문에 보고된 한 실험에서 제작자는 비제작자보다 약 63% 높은 금액을 제시했습니다.</p>
+          <p><strong>해석할 때 주의할 점:</strong> 63%는 모든 개인에게 적용되는 고정 수치가 아니라, 특정 실험 조건에서 서로 다른 집단의 평균을 비교한 결과입니다. 또한 노력만으로 항상 가치가 높아지는 것은 아니며, 결과물을 완성했다는 경험이 중요한 조건으로 제시됐습니다.</p>
+          <div class="source-box">Norton, M. I., Mochon, D., & Ariely, D. (2012). <i>The IKEA effect: When labor leads to love.</i> Journal of Consumer Psychology, 22(3), 453–460.<br><a href="https://doi.org/10.1016/j.jcps.2011.08.002" target="_blank" rel="noopener">DOI 원문 정보 보기 ↗</a></div>`
+      },
+      spotlight: {
+        title: '조명 효과: Gilovich et al. (2000)',
+        html: `<p>민망한 티셔츠를 입고 방에 들어간 참가자들은 주변 사람의 약 절반이 자신의 옷을 알아차렸을 것이라고 예상했습니다. 실제로 티셔츠를 기억한 사람은 약 4분의 1 수준이었습니다.</p>
+          <p><strong>해석할 때 주의할 점:</strong> 이 수치는 당시 실험의 특정 상황에서 나온 집단 평균입니다. 이 사이트의 가상 상황과 동일한 실험 결과가 아니며, 모든 사회적 상황에서 관심을 정확히 절반으로 과대평가한다는 뜻도 아닙니다.</p>
+          <div class="source-box">Gilovich, T., Medvec, V. H., & Savitsky, K. (2000). <i>The spotlight effect in social judgment.</i> Journal of Personality and Social Psychology, 78(2), 211–222.<br><a href="https://doi.org/10.1037/0022-3514.78.2.211" target="_blank" rel="noopener">DOI 원문 정보 보기 ↗</a></div>`
+      },
+      sunk: {
+        title: '매몰비용 효과: Arkes & Blumer (1985)',
+        html: `<p>Arkes와 Blumer는 이미 쓴 돈이 그다음 선택까지 붙잡는지를 여러 실험과 가상 상황으로 살펴봤습니다. 사람들은 공짜로 얻은 선택보다 돈을 낸 선택을 더 오래 붙드는 경향을 보였습니다.</p>
+          <p><strong>여기서 조심해서 읽을 점:</strong> 연구에서는 여러 사람을 서로 다른 상황에 나누어 전체적인 차이를 비교합니다. 이 사이트에서 고른 한 번의 답은 그 과정을 간단히 체험하도록 만든 것이며, 실제 선택에는 기대와 취향도 함께 들어갑니다.</p>
+          <div class="source-box">Arkes, H. R., & Blumer, C. (1985). <i>The psychology of sunk cost.</i> Organizational Behavior and Human Decision Processes, 35(1), 124–140.<br><a href="https://doi.org/10.1016/0749-5978(85)90049-4" target="_blank" rel="noopener">DOI 원문 정보 보기 ↗</a></div>`
+      }
+    };
+
+    function openLab(type) {
+      modules.hidden = true;
+      lab.hidden = false;
+      if (type === 'ikea') renderIkea();
+      if (type === 'spotlight') renderSpotlight();
+      if (type === 'sunk') renderSunk();
+      lab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function showEvidence(type) {
+      modalTitle.textContent = evidence[type].title;
+      modalContent.innerHTML = evidence[type].html;
+      dialog.showModal();
+    }
+
+    document.querySelectorAll('[data-open]').forEach(btn => btn.addEventListener('click', () => openLab(btn.dataset.open)));
+    document.querySelector('#backHome').addEventListener('click', () => {
+      lab.hidden = true; modules.hidden = false; modules.scrollIntoView({behavior:'smooth'});
+    });
+    dialog.querySelector('.close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+
+    let ikeaDesign = { color: '#5879a2', pattern: 'dots', name: '나의 책장' };
+
+    function renderIkea() {
+      labLabel.textContent = 'EXPERIENCE 01 · 만들고 평가하기';
+      labTitle.textContent = '내 취향의 책장을 설계해 보세요';
+      labBody.innerHTML = `
+        <div class="step-kicker">STEP 1 / 4</div>
+        <h3>먼저 책장의 색과 뒷판을 골라주세요.</h3>
+        <p class="lead">직접 고른 선택이 완성품에 대한 느낌을 어떻게 바꾸는지도 함께 경험해 봅니다.</p>
+        <div class="design-studio">
+          <div class="design-option"><h4>프레임 색상</h4><div class="swatches">
+            <button class="swatch ${ikeaDesign.color === '#5879a2' ? 'active' : ''}" data-color="#5879a2" style="background:#5879a2" aria-label="파란색"></button>
+            <button class="swatch ${ikeaDesign.color === '#477a68' ? 'active' : ''}" data-color="#477a68" style="background:#477a68" aria-label="초록색"></button>
+            <button class="swatch ${ikeaDesign.color === '#b65f4d' ? 'active' : ''}" data-color="#b65f4d" style="background:#b65f4d" aria-label="붉은색"></button>
+            <button class="swatch ${ikeaDesign.color === '#5e566d' ? 'active' : ''}" data-color="#5e566d" style="background:#5e566d" aria-label="보라색"></button>
+          </div></div>
+          <div class="design-option"><h4>뒷판 무늬</h4><div class="swatches">
+            <button class="pattern-choice ${ikeaDesign.pattern === 'dots' ? 'active' : ''}" data-pattern="dots">점</button>
+            <button class="pattern-choice ${ikeaDesign.pattern === 'lines' ? 'active' : ''}" data-pattern="lines">사선</button>
+            <button class="pattern-choice ${ikeaDesign.pattern === 'plain' ? 'active' : ''}" data-pattern="plain">민무늬</button>
+          </div></div>
+          <div class="design-option"><h4>책장 이름</h4><input class="name-input" id="shelfName" maxlength="12" value="${escapeHtml(ikeaDesign.name)}" aria-label="책장 이름"></div>
+        </div>
+        <div class="actions"><button class="primary" id="startBuild">이 디자인으로 조립하기</button></div>`;
+
+      labBody.querySelectorAll('.swatch').forEach(btn => btn.addEventListener('click', () => {
+        labBody.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active'); ikeaDesign.color = btn.dataset.color;
+      }));
+      labBody.querySelectorAll('.pattern-choice').forEach(btn => btn.addEventListener('click', () => {
+        labBody.querySelectorAll('.pattern-choice').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active'); ikeaDesign.pattern = btn.dataset.pattern;
+      }));
+      labBody.querySelector('#startBuild').addEventListener('click', () => {
+        ikeaDesign.name = labBody.querySelector('#shelfName').value.trim() || '나의 책장';
+        renderIkeaBuild();
+      });
+    }
+
+    function renderIkeaBuild() {
+      labBody.innerHTML = `
+        <div class="step-kicker">STEP 2 / 4</div>
+        <h3>이제 아홉 개의 부품을 직접 조립하세요.</h3>
+        <p class="lead">부품을 누른 뒤 알맞은 빈칸을 누르세요. 컴퓨터에서는 끌어다 놓을 수도 있습니다.</p>
+        <div class="build-area">
+          <div class="parts-box"><h4>조립할 부품</h4><div class="parts">
+            <button class="part" draggable="true" data-part="top">상판</button><button class="part" draggable="true" data-part="bottom">하판</button>
+            <button class="part" draggable="true" data-part="left">왼쪽 기둥</button><button class="part" draggable="true" data-part="right">오른쪽 기둥</button>
+            <button class="part" draggable="true" data-part="shelf1">위 선반</button><button class="part" draggable="true" data-part="shelf2">가운데 선반</button>
+            <button class="part" draggable="true" data-part="shelf3">아래 선반</button><button class="part" draggable="true" data-part="footL">왼쪽 받침</button>
+            <button class="part" draggable="true" data-part="footR">오른쪽 받침</button>
+          </div></div>
+          <div class="shelf-stage"><h4>${escapeHtml(ikeaDesign.name)} 설계도</h4>
+            <div class="shelf-frame pattern-${ikeaDesign.pattern}" style="--wood:${ikeaDesign.color}">
+              <button class="slot" data-slot="top">상판</button>
+              <button class="slot" data-slot="left">왼쪽</button>
+              <div class="shelves"><button class="slot" data-slot="shelf1">위 선반</button><button class="slot" data-slot="shelf2">가운데 선반</button><button class="slot" data-slot="shelf3">아래 선반</button></div>
+              <button class="slot" data-slot="right">오른쪽</button><button class="slot" data-slot="bottom">하판</button>
+              <div class="feet"><button class="slot foot-slot" data-slot="footL">왼쪽 받침</button><button class="slot foot-slot" data-slot="footR">오른쪽 받침</button></div>
+            </div><div class="build-status" id="buildStatus">완성한 부품 0 / 9</div>
+          </div>
+        </div>
+        <div class="actions"><button class="primary" id="toRating" disabled>완성한 책장 평가하기</button><button class="ghost" id="changeDesign">디자인 다시 고르기</button></div>`;
+
+      let selected = null;
+      const placed = new Set();
+      const parts = [...labBody.querySelectorAll('.part')];
+      const slots = [...labBody.querySelectorAll('.slot')];
+      const status = labBody.querySelector('#buildStatus');
+      const next = labBody.querySelector('#toRating');
+      function selectPart(part) {
+        if (part.classList.contains('placed')) return;
+        parts.forEach(p => p.classList.remove('selected')); selected = part.dataset.part; part.classList.add('selected');
+      }
+      function place(partName, slot) {
+        if (!partName || placed.has(partName)) return;
+        if (partName === slot.dataset.slot) {
+          placed.add(partName); slot.classList.add('correct');
+          const part = parts.find(p => p.dataset.part === partName);
+          part.classList.add('placed'); part.classList.remove('selected'); selected = null;
+          status.textContent = placed.size === 9 ? `${ikeaDesign.name} 완성! 이제 직접 평가해 보세요.` : `완성한 부품 ${placed.size} / 9`;
+          next.disabled = placed.size !== 9;
+        } else {
+          slot.classList.remove('wrong'); void slot.offsetWidth; slot.classList.add('wrong');
+          status.textContent = '모양이 맞지 않아요. 다른 자리를 골라보세요.';
+        }
+      }
+      parts.forEach(part => { part.addEventListener('click', () => selectPart(part)); part.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', part.dataset.part)); });
+      slots.forEach(slot => { slot.addEventListener('click', () => place(selected, slot)); slot.addEventListener('dragover', e => e.preventDefault()); slot.addEventListener('drop', e => { e.preventDefault(); place(e.dataTransfer.getData('text/plain'), slot); }); });
+      labBody.querySelector('#changeDesign').addEventListener('click', renderIkea);
+      next.addEventListener('click', renderIkeaRatings);
+    }
+
+    function renderIkeaRatings() {
+      labBody.innerHTML = `
+        <div class="step-kicker">STEP 3 / 4</div><h3>방금 만든 책장과 완성품을 각각 평가해 주세요.</h3>
+        <p class="lead">점수에는 정답이 없습니다. 지금 드는 느낌대로 골라주세요.</p>
+        <div class="ratings">
+          ${ratingCard('self', `${escapeHtml(ikeaDesign.name)} · 내가 직접 만든 책장`, 3, 15000, '', ikeaDesign.color, ikeaDesign.pattern, ikeaDesign.name)}
+          ${ratingCard('auto','이미 완성되어 있던 책장',3,15000,'auto','#8b96a6','plain','완성품')}
+        </div>
+        <div class="actions"><button class="primary" id="calcIkea">내 평가 확인하기</button><button class="ghost" id="redoIkea">처음부터 다시 만들기</button></div>`;
+      labBody.querySelectorAll('input[type="range"]').forEach(input => input.addEventListener('input', () => { labBody.querySelector(`[data-value="${input.id}"]`).textContent = `${input.value}점`; }));
+      labBody.querySelector('#redoIkea').addEventListener('click', renderIkea);
+      labBody.querySelector('#calcIkea').addEventListener('click', () => {
+        const selfAttach = +document.querySelector('#selfAttach').value, autoAttach = +document.querySelector('#autoAttach').value;
+        const selfPrice = Math.max(0, +document.querySelector('#selfPrice').value || 0), autoPrice = Math.max(0, +document.querySelector('#autoPrice').value || 0);
+        const attachDiff = selfAttach - autoAttach, priceDiff = selfPrice - autoPrice;
+        let headline, explanation, meaning;
+        const effectIntro = '<strong>이케아 효과</strong>는 직접 만든 물건을 이미 완성된 물건보다 더 좋아하거나 더 가치 있게 평가하는 경향이에요.';
+        const attachText = attachDiff > 0
+          ? `애착은 직접 만든 책장에 ${attachDiff}점 더 높게 주었어요.`
+          : attachDiff < 0
+          ? `애착은 완성품에 ${Math.abs(attachDiff)}점 더 높게 주었어요.`
+          : '애착 점수는 두 책장이 같았어요.';
+        const priceText = priceDiff > 0
+          ? `가격은 직접 만든 책장에 ${priceDiff.toLocaleString()}원 더 높게 매겼어요.`
+          : priceDiff < 0
+          ? `가격은 완성품에 ${Math.abs(priceDiff).toLocaleString()}원 더 높게 매겼어요.`
+          : '붙인 가격은 두 책장이 같았어요.';
+        if (attachDiff > 0 && priceDiff > 0) {
+          headline = '직접 만든 책장을 더 아끼고, 더 비싸게 평가했어요.';
+          explanation = `${attachText} ${priceText}`;
+          meaning = '노력을 들여 완성한 물건을 더 좋아하고 더 가치 있게 보는 이케아 효과와 같은 방향이에요.';
+        } else if (attachDiff < 0 && priceDiff < 0) {
+          headline = '이번에는 완성품이 더 마음에 들었어요.';
+          explanation = `${attachText} ${priceText}`;
+          meaning = '이번 선택에서는 이케아 효과와 반대 방향이 나타났어요. 직접 만들었다는 사실보다 완성품의 모양이나 취향이 더 중요했던 거예요.';
+        } else if (attachDiff === 0 && priceDiff === 0) {
+          headline = '두 책장을 똑같이 평가했어요.';
+          explanation = `${attachText} ${priceText}`;
+          meaning = '이번에는 직접 조립한 경험이 애착이나 가격의 차이로 이어지지 않았기 때문에, 이케아 효과와 같은 방향은 나타나지 않았어요.';
+        } else {
+          headline = '마음과 가격이 서로 다르게 움직였어요.';
+          explanation = `${attachText} ${priceText}`;
+          meaning = attachDiff > 0
+            ? '직접 만든 책장에 더 마음이 갔다는 점에서는 이케아 효과와 같은 방향이에요. 하지만 더 높은 가격을 붙이지는 않았으므로, 애착에서만 일부 나타난 결과입니다.'
+            : attachDiff < 0
+            ? '완성품에 더 마음이 갔다는 점은 이케아 효과와 반대 방향이에요. 다만 직접 만든 책장에 더 높은 가격을 붙였으므로, 가격 판단에서는 같은 방향이 나타났습니다.'
+            : priceDiff > 0
+            ? '마음이 가는 정도는 같았지만 직접 만든 책장에 더 높은 가격을 붙였으므로, 가격 판단에서는 이케아 효과와 같은 방향이 나타났어요.'
+            : '마음이 가는 정도는 같았고 완성품에 더 높은 가격을 붙였으므로, 이번 결과는 이케아 효과와 같은 방향으로 나타나지 않았어요.';
+        }
+        labBody.innerHTML = `<div class="step-kicker">STEP 4 / 4</div><h3>${headline}</h3>
+          <div class="result"><p>${explanation}</p><p>${effectIntro}</p><p>${meaning}</p></div>
+          <div class="actions"><button class="secondary" id="ikeaEvidence">실제 연구에서는 어땠을까?</button><button class="ghost" id="againIkea">다시 만들어보기</button></div>`;
+        labBody.querySelector('#ikeaEvidence').addEventListener('click', () => showEvidence('ikea'));
+        labBody.querySelector('#againIkea').addEventListener('click', renderIkea);
+      });
+    }
+
+    function ratingCard(prefix, title, attach, price, extra, color, pattern, label) {
+      return `<div class="rating-card ${extra}"><div class="finished-shelf pattern-${pattern} ${extra ? 'auto-preview' : ''}" style="--preview-wood:${color}"><span class="shelf-label">${escapeHtml(label)}</span></div><h4>${title}</h4>
+        <div class="field"><label for="${prefix}Attach"><span>얼마나 마음이 가나요?</span><b data-value="${prefix}Attach">${attach}점</b></label><input id="${prefix}Attach" type="range" min="1" max="5" value="${attach}"></div>
+        <div class="field"><label for="${prefix}Price">직접 가격을 붙인다면?</label><input id="${prefix}Price" type="number" min="0" step="1000" value="${price}" aria-label="${title} 가격"></div></div>`;
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    }
+
+    function renderSpotlight() {
+      labLabel.textContent = 'EXPERIENCE 02 · 다른 사람의 시선 가늠하기';
+      labTitle.textContent = '내 실수를 몇 명이나 기억할까요?';
+      labBody.innerHTML = `<div class="step-kicker">ADAPTED SCENARIO</div><h3>교실에 있던 20명 중 몇 명이 기억할까요?</h3>
+        <div class="scenario">발표 도중 실수로 화면에 자신의 우스꽝스러운 사진이 3초 동안 나타났습니다. 교실에는 발표자를 제외하고 20명이 있었습니다. 발표가 끝난 뒤 그 사진을 기억하는 사람은 몇 명일까요?</div>
+        <div class="field"><label for="noticed"><span>내 예상</span><b><span id="noticedValue">10</span>명</b></label><input id="noticed" type="range" min="0" max="20" value="10"></div>
+        <div class="actions"><button class="primary" id="calcSpot">연구와 비교하기</button></div>`;
+      const slider = labBody.querySelector('#noticed');
+      slider.addEventListener('input', () => labBody.querySelector('#noticedValue').textContent = slider.value);
+      labBody.querySelector('#calcSpot').addEventListener('click', () => {
+        const predicted = +slider.value;
+        const researchApprox = 5;
+        let message, comparison;
+        if (predicted > researchApprox) {
+          message = '실제로 기억한 사람보다 더 많을 거라고 예상했어요.';
+          comparison = `티셔츠 실험의 실제 비율을 20명에 대입하면 약 5명이에요. 당신의 예상은 그보다 ${predicted - researchApprox}명 많았습니다. 연구 참가자들도 다른 사람이 자신을 실제보다 더 많이 보았을 것이라고 예상했어요. 당신의 예상도 그 경향과 닮아 있습니다.`;
+        } else if (predicted === researchApprox) {
+          message = '실제로 기억한 비율과 가깝게 예상했어요.';
+          comparison = '티셔츠 실험에서 실제로 기억한 사람의 비율을 20명에 대입하면 약 5명이에요. 당신은 다른 사람의 시선을 크게 부풀리지 않고 연구의 실제 결과와 비슷하게 예상했습니다.';
+        } else {
+          message = '실제로 기억한 비율보다도 적을 거라고 예상했어요.';
+          comparison = `티셔츠 실험의 실제 비율을 20명에 대입하면 약 5명이에요. 당신의 예상은 그보다 ${researchApprox - predicted}명 적었습니다. 이번에는 다른 사람이 나를 많이 보았을 것이라고 생각하는 조명 효과의 방향이 나타나지 않았어요.`;
+        }
+        labBody.innerHTML = `<div class="step-kicker">내가 예상한 시선</div><h3>${message}</h3>
+          <div class="result"><div class="big-number">${predicted}명</div>
+          <p>당신은 교실에 있던 20명 가운데 ${predicted}명이 그 사진을 기억할 것이라고 보았어요.</p>
+          <p>${comparison}</p>
+          <p class="limit">다만 이곳의 사진 장면과 원래 연구의 티셔츠 장면은 달라요. 5명은 이 문제의 정답이라기보다, 내 예상이 실제 연구 결과보다 높았는지 낮았는지 살펴보기 위한 기준입니다.</p></div>
+          <div class="actions"><button class="secondary" id="spotEvidence">실제 티셔츠 실험 보기</button><button class="ghost" id="againSpot">다시 예상하기</button></div>`;
+        labBody.querySelector('#spotEvidence').addEventListener('click', () => showEvidence('spotlight'));
+        labBody.querySelector('#againSpot').addEventListener('click', renderSpotlight);
+      });
+    }
+
+    function renderSunk() {
+      labLabel.textContent = 'EXPERIENCE 03 · 이미 쓴 돈과 다음 선택';
+      labTitle.textContent = '이미 쓴 돈은 선택을 바꿀까요?';
+      const paid = Math.random() < .5;
+      labBody.innerHTML = `<div class="step-kicker">우연히 받은 상황 · ${paid ? '15,000원을 낸 표' : '무료로 받은 표'}</div>
+        <h3>${paid ? '15,000원을 내고 산 영화표' : '행사에서 무료로 받은 영화표'}</h3>
+        <div class="scenario">영화가 시작된 지 30분이 지났지만 너무 지루합니다. 앞으로 90분이 더 남았고, 나가면 집에서 편하게 쉴 수 있습니다. ${paid ? '표값 15,000원은 환불받을 수 없습니다.' : '표는 무료로 받았으며 돌려줄 필요도 없습니다.'}</div>
+        <p class="lead">당신이라면 어떻게 하겠습니까?</p>
+        <div class="choice-grid"><button class="choice" data-choice="stay">끝까지 계속 본다<br><small>혹시 후반부가 재미있을 수도 있다.</small></button><button class="choice" data-choice="leave">지금 나간다<br><small>남은 시간을 다른 일에 쓴다.</small></button></div>`;
+      labBody.querySelectorAll('.choice').forEach(btn => btn.addEventListener('click', () => {
+        const stay = btn.dataset.choice === 'stay';
+        let headline;
+        let interpretation;
+        if (paid && stay) {
+          headline = '이미 낸 15,000원이 마음에 걸렸을지도 몰라요.';
+          interpretation = '재미는 없지만 “돈을 냈는데 지금 나가면 아깝잖아”라는 마음으로 계속 보기로 한 선택이에요. 영화를 더 본다고 이미 낸 돈이 돌아오지는 않기 때문에, 매몰비용 효과와 같은 방향입니다.';
+        } else if (paid && !stay) {
+          headline = '표값보다 앞으로 남은 90분을 골랐어요.';
+          interpretation = '이미 낸 15,000원은 돌려받을 수 없으니, 지금부터 쓸 수 있는 시간을 기준으로 결정한 셈이에요. 이번 선택은 매몰비용 효과와 반대 방향입니다.';
+        } else if (!paid && stay) {
+          headline = '돈을 내지 않았어도 계속 보기로 했어요.';
+          interpretation = '“조금만 더 보면 재미있어질지도 몰라”라는 기대가 남았을 수 있어요. 돈을 쓰지 않은 상황이므로, 이 선택만으로 매몰비용 효과라고 보기는 어려워요.';
+        } else {
+          headline = '미련 없이 남은 90분을 골랐어요.';
+          interpretation = '무료로 받은 표에는 포기하기 아까운 돈이 없었고, 당신은 지루한 영화보다 앞으로 남은 시간을 택했어요. 매몰비용에 붙잡힐 이유가 없는 상황에서 자연스럽게 나올 수 있는 선택입니다.';
+        }
+        labBody.innerHTML = `<div class="step-kicker">내가 고른 다음 행동 · ${paid ? '15,000원을 낸 상황' : '무료표를 받은 상황'}</div><h3>${headline}</h3>
+          <div class="result"><p>${interpretation}</p>
+          <p><strong>매몰비용 효과</strong>는 이미 돌려받을 수 없는 돈이나 시간을 아까워한 나머지, 다음 선택까지 거기에 붙잡히는 현상이에요. 같은 ‘계속 본다’는 선택도 돈을 낸 상황에서는 “아까워서”, 무료인 상황에서는 “곧 재미있어질 것 같아서” 나올 수 있어요. 그래서 연구에서는 여러 사람에게 서로 다른 상황을 주고 두 집단의 선택 차이를 살펴봅니다.</p></div>
+          <div class="actions"><button class="secondary" id="sunkEvidence">실제 연구에서는 어땠을까?</button><button class="ghost" id="againSunk">다른 상황도 받아보기</button></div>`;
+        labBody.querySelector('#sunkEvidence').addEventListener('click', () => showEvidence('sunk'));
+        labBody.querySelector('#againSunk').addEventListener('click', renderSunk);
+      }));
+    }
+  </script>
+</body>
+</html>
